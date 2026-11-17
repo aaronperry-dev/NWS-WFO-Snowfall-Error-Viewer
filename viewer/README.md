@@ -14,6 +14,16 @@ php -S localhost:8000 -t viewer                                       # then ope
 
 The repository already contains the exported 2025–26 season (`viewer/data/`, about 160 KB), so step 2 alone works after cloning. Running step 1 again for another season adds it to the season menu.
 
+### GitHub Pages (no PHP)
+
+GitHub Pages cannot run PHP, so the repository also contains a static twin of the page, `viewer/index.html`, which reads `data/manifest.json`, `data/cwa.geojson` and the `.bin` files directly. The workflow `.github/workflows/pages.yml` publishes it on every push to `main` that touches `viewer/`.
+
+One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. The site then appears at `https://<user>.github.io/<repo>/` (the first run can also be started from the Actions tab). To try the static version locally: `python -m http.server -d viewer` and open `/index.html`.
+
+`index.php` and `index.html` are the same page; if you edit one, edit the other. `app.js` is shared and switches mode on `window.NWS.dataDir`.
+
+### Any PHP host
+
 On a normal web host, upload the `viewer/` folder to any PHP 8.1+ site (Apache or nginx + PHP-FPM). `.htaccess` turns off directory listing. To keep the data outside the web root, set the environment variable `NWS_VIEWER_DATA=/path/to/data`.
 
 ## What it shows
@@ -49,7 +59,8 @@ The values are exactly those of the printed mean-error maps (pipeline figure sta
 
 ```
 viewer/
-  index.php          page shell; inlines the manifest
+  index.php          page shell for PHP hosting; inlines the manifest
+  index.html         the same page for static hosting (GitHub Pages)
   api.php            read-only API: ?action=manifest | cwa | bin&season=2025-26&office=CAR
   config.php         title and data directory
   assets/app.js      map, .bin decoding, tile painting, table, legend, hover, details

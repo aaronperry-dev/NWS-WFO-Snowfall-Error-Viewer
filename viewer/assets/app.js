@@ -4,7 +4,13 @@
  * Grid file format (see manifest.json): little-endian float32, row-major, row 0 = north edge, NaN = no data, -999 = excluded radar sector. */
 (() => {
 'use strict';
-const API = (window.NWS && window.NWS.api) || 'api.php';
+/* Two ways to get the data: through api.php (PHP hosting), or, when the page sets window.NWS.dataDir, straight from static files (GitHub Pages). */
+const API = (window.NWS && window.NWS.api) || 'api.php', DATA_DIR = window.NWS && window.NWS.dataDir;
+const url = {
+  manifest: () => DATA_DIR ? `${DATA_DIR}manifest.json` : `${API}?action=manifest`,
+  cwa: () => DATA_DIR ? `${DATA_DIR}cwa.geojson` : `${API}?action=cwa`,
+  bin: (season, off, e) => DATA_DIR ? DATA_DIR + e.file.split('/').map(encodeURIComponent).join('/') : `${API}?action=bin&season=${encodeURIComponent(season)}&office=${encodeURIComponent(off)}`,
+};
 const MINUS = '−', EXCLUDED = -999;
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -98,7 +104,7 @@ async function loadSeason(id) {
   const token = ++state.token, s = state.M.seasons[id]; notice('');
   try {
     const grids = await Promise.all(Object.entries(s.offices).map(async ([off, e]) => {
-      const r = await fetch(`${API}?action=bin&season=${encodeURIComponent(id)}&office=${encodeURIComponent(off)}`);
+      const r = await fetch(url.bin(id, off, e));
       if (!r.ok) throw new Error(`${off}: HTTP ${r.status}`);
       const buf = await r.arrayBuffer(); if (buf.byteLength !== e.nx * e.ny * 4) throw new Error(`${off}: expected ${e.nx * e.ny * 4} bytes, got ${buf.byteLength}`);
       return Object.assign({ off, visible: true, data: toFloat32LE(buf) }, e);
@@ -205,7 +211,7 @@ function initMap() {
 }
 async function initCwa() {
   try {
-    cwaData = await getJson(`${API}?action=cwa`);
+    cwaData = await getJson(url.cwa());
     cwaCasing = L.geoJSON(cwaData, { interactive: false, style: { color: '#fff', weight: 5, fill: false } }).addTo(map);
     cwaGeo = L.geoJSON(cwaData, { style: { weight: 2.4, fill: true, fillOpacity: 0.001 }, onEachFeature: (f, l) => l.on('click', () => select(f.properties.cwa, false)) }).addTo(map);
     cwaGeo.bringToFront(); styleCwa(); drawLabels();
@@ -214,7 +220,7 @@ async function initCwa() {
 
 async function main() {
   buildLut();
-  const inline = el('manifest'); try { state.M = inline ? JSON.parse(inline.textContent) : await getJson(`${API}?action=manifest`); } catch (err) { notice('No data found. Run scripts/export_viewer_data.py first.'); return; }
+  const inline = el('manifest'); try { state.M = inline ? JSON.parse(inline.textContent) : await getJson(url.manifest()); } catch (err) { notice('No data found. Run scripts/export_viewer_data.py first.'); return; }
   VMIN = state.M.layer.vmin; VMAX = state.M.layer.vmax; buildLut();
   const h = readHash(), seasons = Object.keys(state.M.seasons).sort().reverse();
   if (isFinite(h.op)) state.opacity = Math.min(1, Math.max(0, h.op));

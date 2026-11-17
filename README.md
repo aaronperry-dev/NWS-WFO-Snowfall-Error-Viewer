@@ -419,7 +419,7 @@ python scripts/export_viewer_data.py --workdir ./work     # writes viewer/data/*
 php -S localhost:8000 -t viewer                           # http://localhost:8000   (PHP 8.1+)
 ```
 
-See [`viewer/README.md`](viewer/README.md) for the `.bin` format, the API and deployment.
+The viewer also runs as a static site on GitHub Pages (`viewer/index.html`, deployed by `.github/workflows/pages.yml`; set *Settings → Pages → Source* to *GitHub Actions* once). See [`viewer/README.md`](viewer/README.md) for the `.bin` format, the API and deployment.
 
 ### Efficiency and server politeness
 
