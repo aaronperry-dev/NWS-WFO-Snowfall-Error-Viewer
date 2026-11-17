@@ -1,0 +1,21 @@
+{
+ "bounds": [
+  [
+   39.3,
+   -77.5
+  ],
+  [
+   48.7,
+   -65.0
+  ]
+ ],
+ "minzoom": 5,
+ "maxzoom": 9,
+ "tile_size": 256,
+ "tiles": "tiles/{z}/{x}/{y}.webp",
+ "built": "2026-11-17",
+ "sources": {
+  "terrain": "Terrain Tiles on AWS (Terrarium), hillshaded locally",
+  "boundaries": "Natural Earth 1:50m"
+ }
+}

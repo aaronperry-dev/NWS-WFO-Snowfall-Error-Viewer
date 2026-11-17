@@ -31,9 +31,26 @@ On a normal web host, upload the `viewer/` folder to any PHP 8.1+ site (Apache o
 * **Overlay:** the mean error of each ~4 km (0.04°) cell over the season's storms, drawn **unsmoothed at the native grid** on the same fixed diverging scale as the printed maps (±2 in; red = forecast too high, blue = too low). Cells are painted by sampling the grid per screen pixel, so they stay square and correctly placed at every zoom level.
 * **CWA outlines** (colored per office) with the office's area-wide mean error as a label. Click an outline, or a row in the table, for details.
 * **Details:** storms, mean error with its 90 % storm-bootstrap interval, percent bias, MAE, RMSE, hit rate, share of the CWA above +0.5 in / below −0.5 in, and the full-record mean error for comparison. Offices with fewer than 10 storms are flagged.
-* **Hover** (or tap on touch screens) reads the value of the cell under the pointer.
+* **Cursor tooltip:** a small window follows the pointer over the map and reads the office and mean error of the cell under it (tap on touch screens).
 * **Hatched cells** are radar beam-blockage artifacts in the observation analysis, excluded from every statistic.
-* Controls: season, basemap (CARTO light, OpenStreetMap, Esri topographic, Esri satellite), overlay opacity, show/hide per office. The state is kept in the URL hash, so a view can be shared: `#season=2025-26&office=CAR&base=topo&op=0.7`. `Esc` clears the selection.
+* **Own basemap** (see below): shaded-relief terrain, ocean and lakes, coastline, the U.S.–Canada border, state and province lines, and place names. Nothing is loaded from third-party tile servers.
+* Controls: season, basemap (terrain or plain), overlay opacity, show/hide per office. The state is kept in the URL hash, so a view can be shared: `#season=2025-26&office=CAR&base=terrain&op=0.7`. `Esc` clears the selection.
+
+## Basemap (`viewer/basemap/`)
+
+Built once by `python scripts/build_basemap.py` (about 40 s; needs internet only for that step) and committed, so the viewer itself is self-contained.
+
+| File | Content |
+|---|---|
+| `tiles/{z}/{x}/{y}.webp` | shaded-relief terrain, Web Mercator XYZ tiles, zoom 5–9 (the map allows zoom 10 by stretching zoom-9 tiles) |
+| `water.geojson` | ocean and lake polygons |
+| `lines.geojson` | coastline and lake shores, the international border, state/province lines |
+| `labels.json` | state, lake and ocean names with the zoom they appear at |
+| `meta.json` | extent (39.3–48.7°N, 77.5–65.0°W), zoom range, sources |
+
+* **Terrain:** elevation from *Terrain Tiles on AWS* (Terrarium PNGs on S3, `elevation-tiles-prod`), hillshaded by the script (light from the northwest, with the ground size of a pixel corrected for latitude) and tinted by elevation in muted colours. Data sources of those tiles (USGS NED, NRCan CDEM, SRTM and others) are listed at <https://github.com/tilezen/joerd/blob/master/docs/attribution.md>.
+* **Boundaries, coast, lakes:** Natural Earth 1:50m (medium resolution; public domain), clipped to the extent and rounded to 0.0001°. They are vectors, so lines stay sharp at every zoom. Draw order: terrain, water, snowfall-error overlay, coast / state / border lines, CWA outlines, place names, office labels.
+* Options: `--zmax 10` adds a zoom level (about four times the tiles), `--west/--east/--south/--north` change the extent, `--quality` the WebP quality.
 
 ## Data files (`viewer/data/`)
 
@@ -63,16 +80,17 @@ viewer/
   index.html         the same page for static hosting (GitHub Pages)
   api.php            read-only API: ?action=manifest | cwa | bin&season=2025-26&office=CAR
   config.php         title and data directory
-  assets/app.js      map, .bin decoding, tile painting, table, legend, hover, details
+  assets/app.js      map, basemap layers, .bin decoding, tile painting, table, legend, cursor tooltip, details
   assets/style.css
   vendor/leaflet/    Leaflet 1.9.4 (BSD-2-Clause), so the viewer needs no CDN for its code
   data/              exported grids, manifest, outlines
+  basemap/           own basemap: terrain tiles, water, lines, labels (scripts/build_basemap.py)
 ```
 
 `api.php` looks the season and office up as **keys of the manifest** and never builds a file path from request input, so only the listed files can be served. Responses carry an `ETag` (304 when unchanged), are gzip-compressed when the client accepts it, and are cacheable for an hour. Only `GET` and `HEAD` are allowed.
 
 ## Notes
 
-* **Basemaps** are loaded by the visitor's browser from CARTO, OpenStreetMap and Esri, subject to their terms and usage policies; the OpenStreetMap standard tile server is meant for light use. For a busy public site use a provider with an account and key. The overlay itself needs no external service.
+* The viewer makes **no requests to other servers**: the basemap, the overlay and the JavaScript library are all served from this folder (an earlier version used CARTO tiles, which now require an API key).
 * A single season rests on few storms (5–24 per office), so differences between offices in one season are often within the intervals shown. See the main README for the multi-season study.
 * Data: NWS NDFD forecasts (NCEI), NOHRSC National Snowfall Analysis, NWS county warning areas. Leaflet © Vladimir Agafonkin and contributors.

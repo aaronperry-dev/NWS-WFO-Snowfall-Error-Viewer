@@ -14,11 +14,14 @@ $h = fn(string $s): string => htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 
 <link rel="stylesheet" href="assets/style.css?v=<?= $v('assets/style.css') ?>">
 </head>
 <body>
+<header class="topbar">
+  <h1><?= $h(APP_TITLE) ?></h1>
+  <p>New England NWS forecast offices &middot; <span id="topSeason"></span></p>
+</header>
 <div class="app">
   <div id="map" role="application" aria-label="Map of mean snowfall forecast error by NWS office"></div>
   <aside class="panel">
     <header>
-      <h1><?= $h(APP_TITLE) ?></h1>
       <p class="sub">Mean snowfall forecast error (forecast − observed) for the New England NWS forecast offices, drawn at the native ~4&nbsp;km grid of the observations.</p>
     </header>
     <div id="notice" class="notice" hidden></div>

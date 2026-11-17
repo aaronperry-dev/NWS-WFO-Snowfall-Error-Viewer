@@ -412,10 +412,11 @@ Figures per office: `_0_mean_error_map`, `_1_bias_MAE_maps`, `_2_hit_rate_maps`,
 
 ### Web viewer
 
-`viewer/` is a small PHP / JavaScript web page that shows the **mean error for each office for the most recent season** on an interactive map, reading raw `.bin` grids. The 2025–26 season is included.
+`viewer/` is a small PHP / JavaScript web page that shows the **mean error for each office for the most recent season** on an interactive map, reading raw `.bin` grids. The basemap is built from AWS Terrain Tiles and Natural Earth 1:50m, so no third-party tile servers are used. The 2025–26 season is included.
 
 ```bash
 python scripts/export_viewer_data.py --workdir ./work     # writes viewer/data/*.bin, manifest.json, cwa.geojson
+python scripts/build_basemap.py                         # writes viewer/basemap/ (own terrain + boundary basemap; already included)
 php -S localhost:8000 -t viewer                           # http://localhost:8000   (PHP 8.1+)
 ```
 
@@ -440,6 +441,7 @@ Offices, thresholds, radar exclusions and network limits are in the **SETTINGS**
 nws_snowfall_verification.py   the whole pipeline in one file: download, storm detection, verification, maps, regional map, radar test
 scripts/summary_statistics.py  recomputes every table in this README from the pipeline's storm files
 scripts/export_viewer_data.py  writes the .bin grids, manifest and CWA outlines used by the web viewer
+scripts/build_basemap.py       builds the viewer's own basemap (terrain tiles, water, borders, labels)
 viewer/                        PHP / JavaScript web viewer of the last season's mean error (see viewer/README.md)
 data/cwa_new_england.geojson   NWS county warning area polygons used for the results here
 results/                       CSV tables behind the README (office summary, by-amount, by-terrain, largest storms)

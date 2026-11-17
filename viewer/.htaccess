@@ -2,3 +2,10 @@ Options -Indexes
 <FilesMatch "\.bin$">
   ForceType application/octet-stream
 </FilesMatch>
+
+# basemap tiles and vectors change only when scripts/build_basemap.py is re-run
+<IfModule mod_headers.c>
+  <FilesMatch "\.(webp|geojson)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>

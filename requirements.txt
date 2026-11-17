@@ -6,5 +6,5 @@ shapely>=2.0
 pyproj>=3.5
 pygrib>=2.1        # needs the ECCODES library (apt install libeccodes-dev, or conda install -c conda-forge pygrib)
 tifffile>=2023.1
-pillow>=10.0
+pillow>=10.0         # also writes the basemap WebP tiles
 requests>=2.28

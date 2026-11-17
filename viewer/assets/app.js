@@ -1,5 +1,5 @@
 /* NWS WFO snowfall forecast error viewer.
- * Loads one raw float32 .bin grid per office (via api.php), and paints them on a Leaflet map with a custom tile layer that samples the
+ * Loads one raw float32 .bin grid per office (via api.php, or straight from data/ on static hosting), and paints them on a Leaflet map with a custom tile layer that samples the
  * grids per screen pixel (nearest cell), so the cells stay crisp, unsmoothed and correctly placed at every zoom.
  * Grid file format (see manifest.json): little-endian float32, row-major, row 0 = north edge, NaN = no data, -999 = excluded radar sector. */
 (() => {
@@ -78,14 +78,12 @@ function toFloat32LE(buf) {
 }
 
 /* ---------- state ---------- */
-const state = { M: null, season: null, grids: [], sel: null, token: 0, base: 'light', opacity: 0.85 };
-let map, errLayer, baseLayer, labelsTiles, cwaGeo, cwaCasing, labelLayer, readoutBox, legendBox, cwaData;
-const BASEMAPS = {
-  light: { name: 'Light (CARTO)', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', o: { subdomains: 'abcd', maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' } },
-  streets: { name: 'Streets (OpenStreetMap)', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', o: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' } },
-  topo: { name: 'Topographic (Esri)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', o: { maxZoom: 19, attribution: 'Tiles &copy; Esri' } },
-  imagery: { name: 'Satellite (Esri)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', o: { maxZoom: 19, attribution: 'Tiles &copy; Esri' } }
-};
+const state = { M: null, season: null, grids: [], sel: null, token: 0, base: 'terrain', opacity: 0.85 };
+let map, errLayer, terrainLayer, bm = {}, baseLabelLayer, cwaGeo, cwaCasing, labelLayer, tipBox, legendBox, cwaData;
+/* Our own basemap (built by scripts/build_basemap.py): shaded-relief terrain tiles + water / border / state-line vectors + labels, all served from basemap/. */
+const BASE_DIR = 'basemap/', LAND_PLAIN = '#eef0ea', WATER_FILL = '#c4d8e4';
+const BASEMAPS = { terrain: { name: 'Terrain (shaded relief)' }, plain: { name: 'Plain (no terrain)' } };
+const LINE_STYLE = { coast: { color: '#5f7a8a', weight: 1 }, state: { color: '#59626b', weight: 1.1, dashArray: '5 3' }, border: { color: '#2c343b', weight: 2 } };
 
 function notice(msg) { const n = el('notice'); n.hidden = !msg; n.textContent = msg || ''; }
 async function getJson(url) { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r.json(); }
@@ -110,7 +108,7 @@ async function loadSeason(id) {
       return Object.assign({ off, visible: true, data: toFloat32LE(buf) }, e);
     }));
     if (token !== state.token) return;                      // a newer season was chosen meanwhile
-    state.season = id; state.grids = grids; if (state.sel && !s.offices[state.sel]) state.sel = null;
+    el('topSeason').textContent = s.label || id; state.season = id; state.grids = grids; if (state.sel && !s.offices[state.sel]) state.sel = null;
     refresh(); drawLegend();
   } catch (err) { notice('Could not load data: ' + err.message); }
 }
@@ -185,29 +183,66 @@ function select(off, zoom = true) {
 }
 
 /* ---------- setup ---------- */
+async function loadBasemapFiles() {
+  try {
+    const [meta, water, lines, labels] = await Promise.all(['meta.json', 'water.geojson', 'lines.geojson', 'labels.json'].map((f) => getJson(BASE_DIR + f)));
+    bm = { meta, water, lines, labels };
+  } catch (err) { bm = {}; notice('Basemap files missing: run scripts/build_basemap.py (' + err.message + ')'); }
+}
 function setBasemap(key) {
-  if (!BASEMAPS[key]) key = 'light'; state.base = key; if (baseLayer) map.removeLayer(baseLayer);
-  baseLayer = L.tileLayer(BASEMAPS[key].url, Object.assign({ zIndex: 1 }, BASEMAPS[key].o)).addTo(map); el('basemap').value = key; writeHash();
-  if (labelsTiles) { map.removeLayer(labelsTiles); labelsTiles = null; }
-  if (key === 'light') labelsTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { pane: 'basemapLabels', subdomains: 'abcd', maxZoom: 19 }).addTo(map);   // place names stay readable above the data
+  if (!BASEMAPS[key]) key = 'terrain'; state.base = key;
+  if (terrainLayer) { if (key === 'terrain') { if (!map.hasLayer(terrainLayer)) terrainLayer.addTo(map); } else map.removeLayer(terrainLayer); }
+  el('map').style.background = key === 'terrain' ? '#d9dfd0' : LAND_PLAIN; el('basemap').value = key; writeHash();
+}
+function drawBaseLabels() {
+  if (!baseLabelLayer || !bm.labels) return; baseLabelLayer.clearLayers(); const z = map.getZoom();
+  for (const l of bm.labels) if (z >= l.minzoom)
+    baseLabelLayer.addLayer(L.marker([l.lat, l.lon], { pane: 'baseLabels', interactive: false, keyboard: false, icon: L.divIcon({ className: '', iconSize: [0, 0], html: `<div class="bm-label bm-${l.kind}">${esc(l.name)}</div>` }) }));
 }
 function initMap() {
-  map = L.map('map', { zoomSnap: 0.25, worldCopyJump: false, attributionControl: false }).setView([44.6, -71.3], 7);
-  map.createPane('basemapLabels').style.zIndex = 450; map.getPane('basemapLabels').style.pointerEvents = 'none';
-  L.control.attribution({ prefix: false }).addTo(map).addAttribution('Data: NWS NDFD (NCEI), NOHRSC &middot; CWA: NWS');
-  errLayer = new ErrorLayer({ tileSize: 256, scale: Math.max(2, Math.ceil(window.devicePixelRatio || 1)),   /* cells are only ~4 px wide at zoom 7: paint at 2x so fractional zoom levels do not blur them */ zIndex: 5, opacity: state.opacity, updateWhenIdle: false, keepBuffer: 2 }).addTo(map);
+  const m = bm.meta, opts = { zoomSnap: 0.25, worldCopyJump: false, attributionControl: false, minZoom: m ? m.minzoom : 5, maxZoom: m ? m.maxzoom + 1 : 10 };
+  if (m) { opts.maxBounds = L.latLngBounds(m.bounds); opts.maxBoundsViscosity = 1.0; }
+  map = L.map('map', opts).setView([44.6, -71.3], 7);
+  if (m) { const fit = () => map.setMinZoom(Math.max(m.minzoom, map.getBoundsZoom(opts.maxBounds, true))); fit(); map.on('resize', fit); }      // never zoom out past the edge of the basemap  // draw order, bottom to top: terrain tiles (tile pane, 200) < water 250 < snowfall-error overlay 300 < borders and coasts 390 < CWA outlines 400 < place names 440 < office labels 600
+  for (const [n, z] of [['water', 250], ['data', 300], ['lines', 390], ['baseLabels', 440]]) { const p = map.createPane(n); p.style.zIndex = z; p.style.pointerEvents = 'none'; }
+  L.control.attribution({ prefix: false }).addTo(map).addAttribution('Data: NWS NDFD (NCEI), NOHRSC &middot; Terrain: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">AWS Terrain Tiles</a> &middot; Boundaries: Natural Earth &middot; CWA: NWS');
+  if (m) {
+    terrainLayer = L.tileLayer(BASE_DIR + m.tiles, { minNativeZoom: m.minzoom, maxNativeZoom: m.maxzoom, minZoom: m.minzoom, maxZoom: m.maxzoom + 1, bounds: m.bounds, tileSize: 256, zIndex: 1, keepBuffer: 4, errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' });
+    L.geoJSON(bm.water, { pane: 'water', renderer: L.svg({ pane: 'water' }), interactive: false, style: { stroke: false, fillColor: WATER_FILL, fillOpacity: 1 } }).addTo(map);
+    const lineLayer = (kind, extra) => L.geoJSON(bm.lines, { pane: 'lines', renderer: L.svg({ pane: 'lines' }), interactive: false, filter: (f) => f.properties.kind === kind, style: Object.assign({ lineCap: 'round', lineJoin: 'round' }, LINE_STYLE[kind], extra) }).addTo(map);
+    lineLayer('state', { color: '#fff', weight: 3, opacity: 0.55, dashArray: null }); lineLayer('border', { color: '#fff', weight: 4, opacity: 0.55 });      // pale casings keep the lines readable over the data colours
+    lineLayer('coast'); lineLayer('state'); lineLayer('border');
+    baseLabelLayer = L.layerGroup().addTo(map); drawBaseLabels(); map.on('zoomend', drawBaseLabels);
+  }
+  errLayer = new ErrorLayer({ pane: 'data', tileSize: 256, scale: Math.max(2, Math.ceil(window.devicePixelRatio || 1)),   /* cells are only ~4 px wide at zoom 7: paint at 2x so fractional zoom levels do not blur them */ zIndex: 5, opacity: state.opacity, updateWhenIdle: false, keepBuffer: 2 }).addTo(map);
   labelLayer = L.layerGroup().addTo(map);
-  readoutBox = L.control({ position: 'bottomleft' }); readoutBox.onAdd = () => { const d = L.DomUtil.create('div', 'readout'); d.innerHTML = 'Move the pointer over the map'; return d; }; readoutBox.addTo(map);
   legendBox = L.control({ position: 'bottomright' }); legendBox.onAdd = () => L.DomUtil.create('div', 'legend'); legendBox.addTo(map); legendBox = legendBox.getContainer();
-  const readoutHtml = (ll) => {
+
+  // pointer tooltip: follows the cursor over the map
+  const tipHtml = (ll) => {
     const s = sample(visibleGrids(), ll.lat, ll.lng), pos = `${ll.lat.toFixed(3)}°N ${Math.abs(ll.lng).toFixed(3)}°W`;
-    return !s ? `<span style="color:#5b6670">No data here</span><br>${pos}`
-      : s.v === EXCLUDED ? `<b>${esc(s.off)}</b> &middot; excluded (radar artifact)<br>${pos}`
-      : `<b>${esc(s.off)}</b> &middot; mean error <b>${fmt(s.v)} in</b><br>${pos}`;
+    if (!s) return `<div class="tip-none">No data</div><div class="tip-pos">${pos}</div>`;
+    const o = state.M.offices[s.off] || {}, head = `<div class="tip-head"><i class="chip" style="background:${esc(o.color || '#888')}"></i><b>${esc(s.off)}</b>${o.name ? ' <span>' + esc(o.name) + '</span>' : ''}</div>`;
+    if (s.v === EXCLUDED) return `${head}<div class="tip-none">Excluded: radar beam-blockage artifact</div><div class="tip-pos">${pos}</div>`;
+    const c = colorOf(s.v);
+    return `${head}<div class="tip-val"><span class="val" style="background:rgb(${c[0]},${c[1]},${c[2]});color:${inkFor(c)}">${fmt(s.v)} in</span> mean error per storm</div><div class="tip-pos">${pos}</div>`;
   };
-  map.on('mousemove', (e) => { readoutBox.getContainer().innerHTML = readoutHtml(e.latlng); });
-  if (window.matchMedia('(hover: none)').matches) map.on('click', (e) => L.popup().setLatLng(e.latlng).setContent(readoutHtml(e.latlng)).openOn(map));     // touch screens: tap to read a cell
-  map.on('mouseout', () => { readoutBox.getContainer().innerHTML = 'Move the pointer over the map'; });
+  const touch = window.matchMedia('(hover: none)').matches, box = map.getContainer(); let dragging = false, last = null;
+  tipBox = L.DomUtil.create('div', 'cursor-tip', box); tipBox.hidden = true;
+  const hideTip = () => { tipBox.hidden = true; };
+  const showTip = (cp) => {
+    last = cp; tipBox.innerHTML = tipHtml(map.containerPointToLatLng(cp)); tipBox.hidden = false;
+    const S = map.getSize(), w = tipBox.offsetWidth, h = tipBox.offsetHeight; let x = cp.x + 16, y = cp.y + 18;
+    if (x + w > S.x - 6) x = cp.x - w - 12; if (y + h > S.y - 6) y = cp.y - h - 12;
+    tipBox.style.transform = `translate(${Math.max(4, Math.round(x))}px, ${Math.max(4, Math.round(y))}px)`;
+  };
+  if (!touch) {
+    box.addEventListener('mousemove', (e) => { if (dragging) return; if (e.target.closest('.leaflet-control, .leaflet-popup')) { last = null; return hideTip(); } showTip(map.mouseEventToContainerPoint(e)); });
+    box.addEventListener('mouseleave', () => { last = null; hideTip(); });
+    map.on('dragstart', () => { dragging = true; hideTip(); }); map.on('dragend', () => { dragging = false; });
+    map.on('zoomstart', hideTip); map.on('moveend', () => { if (last && !dragging) showTip(last); });         // after a zoom or fly-to the cell under a still pointer has changed
+    el('offices').addEventListener('change', () => { if (last) showTip(last); });
+  } else map.on('click', (e) => L.popup().setLatLng(e.latlng).setContent(tipHtml(e.latlng)).openOn(map));     // touch screens: tap to read a cell
 }
 async function initCwa() {
   try {
@@ -227,8 +262,9 @@ async function main() {
   el('season').innerHTML = seasons.map((s) => `<option value="${esc(s)}">${esc(state.M.seasons[s].label)}</option>`).join('');
   el('basemap').innerHTML = Object.entries(BASEMAPS).map(([k, b]) => `<option value="${k}">${esc(b.name)}</option>`).join('');
   el('opacity').value = state.opacity; el('opacityOut').textContent = Math.round(state.opacity * 100) + '%';
+  await loadBasemapFiles();
   initMap(); window.NWS.map = map; window.NWS.state = state;      // exposed for embedding and testing
-  setBasemap(h.base || 'light');
+  setBasemap(h.base || 'terrain');
   const season = seasons.includes(h.season) ? h.season : (state.M.default_season || seasons[0]); el('season').value = season;
   if (h.office) state.sel = h.office.toUpperCase();
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.sel) { state.sel = null; styleCwa(); drawTable(); drawDetail(); writeHash(); } });
