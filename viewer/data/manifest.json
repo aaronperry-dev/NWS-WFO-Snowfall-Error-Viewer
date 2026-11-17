@@ -1,0 +1,285 @@
+{
+ "version": 1,
+ "units": "in",
+ "byte_order": "little-endian float32, row-major, row 0 = north edge, no header",
+ "nodata": "NaN",
+ "excluded": -999.0,
+ "layer": {
+  "id": "mean_error",
+  "label": "Mean error (forecast \u2212 observed)",
+  "units": "inches of snow per storm",
+  "vmin": -2.0,
+  "vmax": 2.0
+ },
+ "offices": {
+  "CAR": {
+   "name": "Caribou",
+   "color": "#009E73",
+   "point": [
+    -68.02,
+    46.87
+   ]
+  },
+  "GYX": {
+   "name": "Gray/Portland",
+   "color": "#0072B2",
+   "point": [
+    -70.26,
+    43.89
+   ]
+  },
+  "BTV": {
+   "name": "Burlington",
+   "color": "#CC79A7",
+   "point": [
+    -73.15,
+    44.47
+   ]
+  },
+  "ALY": {
+   "name": "Albany",
+   "color": "#D55E00",
+   "point": [
+    -73.75,
+    42.65
+   ]
+  },
+  "BOX": {
+   "name": "Boston/Norton",
+   "color": "#E69F00",
+   "point": [
+    -71.18,
+    41.97
+   ]
+  },
+  "OKX": {
+   "name": "New York/Upton",
+   "color": "#56B4E9",
+   "point": [
+    -72.86,
+    40.87
+   ]
+  }
+ },
+ "radar_exclusions": {
+  "BTV": {
+   "radar": "KCXX Burlington",
+   "azimuth": [
+    30.0,
+    160.0
+   ],
+   "min_range_km": 15.0
+  },
+  "GYX": {
+   "radar": "KGYX Gray",
+   "azimuth": [
+    69.0,
+    82.0
+   ],
+   "min_range_km": 15.0
+  }
+ },
+ "min_valid_storm_fraction": 0.9,
+ "small_sample_storms": 10,
+ "seasons": {
+  "2025-26": {
+   "label": "2025\u201326 season",
+   "window": "Jul 1 2025 \u2013 Jun 30 2026",
+   "offices": {
+    "CAR": {
+     "file": "2025-26/CAR_mean_error.bin",
+     "nx": 87,
+     "ny": 87,
+     "west": -70.39999999999999,
+     "north": 47.519999999999996,
+     "dx": 0.03999999999999204,
+     "dy": 0.03999999999999915,
+     "stats": {
+      "storms": 17,
+      "first_storm": "2025-11-16",
+      "last_storm": "2026-04-03",
+      "mean_error": 0.6259320611626404,
+      "mean_error_ci90": [
+       0.128,
+       1.147
+      ],
+      "mae": 1.6849416688049712,
+      "rmse": 2.350326383615541,
+      "percent_bias": 21.144625781672218,
+      "hit_rate": 68.86699198217563,
+      "mean_forecast": 3.586173959584224,
+      "mean_observed": 2.9602417945861816,
+      "area_pct_gt_p05": 58.97572686049614,
+      "area_pct_lt_m05": 8.135502800746867,
+      "cells": 3780,
+      "cells_excluded_radar": 0,
+      "small_sample": false,
+      "full_record_mean_error": 0.618742264643684,
+      "full_record_storms": 145
+     }
+    },
+    "GYX": {
+     "file": "2025-26/GYX_mean_error.bin",
+     "nx": 103,
+     "ny": 87,
+     "west": -72.64000000000001,
+     "north": 46.080000000000005,
+     "dx": 0.04000000000000625,
+     "dy": 0.04000000000000625,
+     "stats": {
+      "storms": 14,
+      "first_storm": "2025-12-02",
+      "last_storm": "2026-03-24",
+      "mean_error": 0.2818519577667226,
+      "mean_error_ci90": [
+       -0.337,
+       0.954
+      ],
+      "mae": 1.6959127041014253,
+      "rmse": 2.306340148238741,
+      "percent_bias": 6.928888846283198,
+      "hit_rate": 69.98102184348602,
+      "mean_forecast": 4.3496319981881975,
+      "mean_observed": 4.067780017852783,
+      "area_pct_gt_p05": 35.165407658244334,
+      "area_pct_lt_m05": 10.080750195363377,
+      "cells": 3858,
+      "cells_excluded_radar": 75,
+      "small_sample": false,
+      "full_record_mean_error": 0.24738462287227123,
+      "full_record_storms": 128
+     }
+    },
+    "BTV": {
+     "file": "2025-26/BTV_mean_error.bin",
+     "nx": 111,
+     "ny": 48,
+     "west": -75.88,
+     "north": 45.080000000000005,
+     "dx": 0.04000000000000625,
+     "dy": 0.04000000000000625,
+     "stats": {
+      "storms": 24,
+      "first_storm": "2025-11-10",
+      "last_storm": "2026-03-23",
+      "mean_error": 0.07154903600847537,
+      "mean_error_ci90": [
+       -0.362,
+       0.484
+      ],
+      "mae": 1.37858324141603,
+      "rmse": 1.985933798799763,
+      "percent_bias": 2.515154588879939,
+      "hit_rate": 76.32696390658175,
+      "mean_forecast": 2.9162661965042855,
+      "mean_observed": 2.844717264175415,
+      "area_pct_gt_p05": 22.983014861995755,
+      "area_pct_lt_m05": 17.993630573248407,
+      "cells": 1885,
+      "cells_excluded_radar": 954,
+      "small_sample": false,
+      "full_record_mean_error": 0.009261276885834606,
+      "full_record_storms": 155
+     }
+    },
+    "ALY": {
+     "file": "2025-26/ALY_mean_error.bin",
+     "nx": 73,
+     "ny": 71,
+     "west": -75.27999999999999,
+     "north": 44.2,
+     "dx": 0.03999999999999204,
+     "dy": 0.03999999999999915,
+     "stats": {
+      "storms": 20,
+      "first_storm": "2025-11-28",
+      "last_storm": "2026-03-14",
+      "mean_error": -0.49809526758966105,
+      "mean_error_ci90": [
+       -0.899,
+       -0.08
+      ],
+      "mae": 1.2636008547518973,
+      "rmse": 1.9818398252808176,
+      "percent_bias": -14.464311448317329,
+      "hit_rate": 81.50396253602305,
+      "mean_forecast": 2.9455202945210535,
+      "mean_observed": 3.443615436553955,
+      "area_pct_gt_p05": 0.5763688760806917,
+      "area_pct_lt_m05": 47.01008645533141,
+      "cells": 2776,
+      "cells_excluded_radar": 0,
+      "small_sample": false,
+      "full_record_mean_error": -0.1810430046812902,
+      "full_record_storms": 122
+     }
+    },
+    "BOX": {
+     "file": "2025-26/BOX_mean_error.bin",
+     "nx": 83,
+     "ny": 47,
+     "west": -73.16,
+     "north": 42.959999999999994,
+     "dx": 0.04000000000000625,
+     "dy": 0.03999999999999915,
+     "stats": {
+      "storms": 9,
+      "first_storm": "2025-12-02",
+      "last_storm": "2026-02-24",
+      "mean_error": -0.5704792573082771,
+      "mean_error_ci90": [
+       -1.217,
+       0.083
+      ],
+      "mae": 1.7116282763967121,
+      "rmse": 2.6283304689805282,
+      "percent_bias": -10.00378318354511,
+      "hit_rate": 80.85852787345324,
+      "mean_forecast": 5.1321558207423035,
+      "mean_observed": 5.702635288238525,
+      "area_pct_gt_p05": 1.320321469575201,
+      "area_pct_lt_m05": 40.81515499425947,
+      "cells": 1754,
+      "cells_excluded_radar": 0,
+      "small_sample": true,
+      "full_record_mean_error": 0.04002682431642879,
+      "full_record_storms": 53
+     }
+    },
+    "OKX": {
+     "file": "2025-26/OKX_mean_error.bin",
+     "nx": 78,
+     "ny": 33,
+     "west": -74.83999999999999,
+     "north": 41.760000000000005,
+     "dx": 0.03999999999999204,
+     "dy": 0.03999999999999915,
+     "stats": {
+      "storms": 5,
+      "first_storm": "2025-12-14",
+      "last_storm": "2026-02-24",
+      "mean_error": -0.8560160434429547,
+      "mean_error_ci90": [
+       -1.712,
+       -0.163
+      ],
+      "mae": 2.039485394150169,
+      "rmse": 2.5990998693277483,
+      "percent_bias": -9.730214858510049,
+      "hit_rate": 66.85661764705883,
+      "mean_forecast": 7.94148749314605,
+      "mean_observed": 8.797504425048828,
+      "area_pct_gt_p05": 4.8713235294117645,
+      "area_pct_lt_m05": 61.76470588235294,
+      "cells": 1104,
+      "cells_excluded_radar": 0,
+      "small_sample": true,
+      "full_record_mean_error": 0.010547143216962832,
+      "full_record_storms": 32
+     }
+    }
+   }
+  }
+ },
+ "default_season": "2025-26"
+}

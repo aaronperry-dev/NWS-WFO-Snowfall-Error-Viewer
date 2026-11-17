@@ -410,6 +410,17 @@ Every stage is **resume-safe**: re-running skips downloads and figures that alre
 
 Figures per office: `_0_mean_error_map`, `_1_bias_MAE_maps`, `_2_hit_rate_maps`, `_3_error_charts`, `_4_bias_terrain_coast`, `_5_largest_storms_F_O_error`, `_6_mean_F_O_error_maps`, plus `regional_mean_error_map`.
 
+### Web viewer
+
+`viewer/` is a small PHP / JavaScript web page that shows the **mean error for each office for the most recent season** on an interactive map, reading raw `.bin` grids. The 2025–26 season is included.
+
+```bash
+python scripts/export_viewer_data.py --workdir ./work     # writes viewer/data/*.bin, manifest.json, cwa.geojson
+php -S localhost:8000 -t viewer                           # http://localhost:8000   (PHP 8.1+)
+```
+
+See [`viewer/README.md`](viewer/README.md) for the `.bin` format, the API and deployment.
+
 ### Efficiency and server politeness
 
 * All downloads go through one HTTP layer with **keep-alive connections, per-host connection and requests-per-second caps** (NOHRSC 6 connections / 8 req/s; NCEI 4 / 3), exponential backoff with jitter, `Retry-After` support, automatic slow-down on 429/503 and a descriptive User-Agent. None of the hosts publishes a numeric limit, so the defaults are deliberately modest; override with `--nohrsc-rate` and `--ncei-rate`.
@@ -428,6 +439,8 @@ Offices, thresholds, radar exclusions and network limits are in the **SETTINGS**
 ```
 nws_snowfall_verification.py   the whole pipeline in one file: download, storm detection, verification, maps, regional map, radar test
 scripts/summary_statistics.py  recomputes every table in this README from the pipeline's storm files
+scripts/export_viewer_data.py  writes the .bin grids, manifest and CWA outlines used by the web viewer
+viewer/                        PHP / JavaScript web viewer of the last season's mean error (see viewer/README.md)
 data/cwa_new_england.geojson   NWS county warning area polygons used for the results here
 results/                       CSV tables behind the README (office summary, by-amount, by-terrain, largest storms)
 docs/figures/                  selected figures used in this README (downsized)
