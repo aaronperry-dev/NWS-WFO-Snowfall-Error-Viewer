@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "\.bin$">
+  ForceType application/octet-stream
+</FilesMatch>
