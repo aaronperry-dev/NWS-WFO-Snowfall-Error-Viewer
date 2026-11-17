@@ -1,0 +1,8 @@
+# working directory of the pipeline (downloads and caches: several GB)
+work/
+*.pkl
+*.npy
+*.grib2
+__pycache__/
+*.pyc
+.DS_Store

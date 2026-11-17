@@ -1,0 +1,45 @@
+office,period,terrain_class,cells,mean_observed_in,mean_error_in,percent_bias
+CAR,full record,coast (<15 km from ocean),739,2.901,0.422,14.528
+CAR,full record,inland lowland (<200 m),1211,3.847,0.184,4.779
+CAR,full record,hills (200-600 m),1805,4.069,0.983,24.161
+CAR,full record,mountains (>=600 m),25,5.541,1.001,18.065
+CAR,2025-26 season,coast (<15 km from ocean),739,2.903,0.849,29.241
+CAR,2025-26 season,inland lowland (<200 m),1211,3.354,0.479,14.267
+CAR,2025-26 season,hills (200-600 m),1805,2.706,0.627,23.156
+CAR,2025-26 season,mountains (>=600 m),25,3.803,1.190,31.286
+GYX,full record,coast (<15 km from ocean),576,3.413,0.099,2.888
+GYX,full record,inland lowland (<200 m),1090,3.739,0.185,4.955
+GYX,full record,hills (200-600 m),1802,4.105,0.323,7.872
+GYX,full record,mountains (>=600 m),390,5.086,0.286,5.618
+GYX,2025-26 season,coast (<15 km from ocean),576,4.488,0.009,0.203
+GYX,2025-26 season,inland lowland (<200 m),1090,4.216,0.299,7.096
+GYX,2025-26 season,hills (200-600 m),1802,3.768,0.360,9.564
+GYX,2025-26 season,mountains (>=600 m),390,4.436,0.261,5.873
+BTV,full record,coast (<15 km from ocean),165,3.236,-0.638,-19.721
+BTV,full record,inland lowland (<200 m),572,3.039,-0.035,-1.163
+BTV,full record,hills (200-600 m),947,3.813,0.103,2.700
+BTV,full record,mountains (>=600 m),201,4.373,0.222,5.066
+BTV,2025-26 season,coast (<15 km from ocean),165,2.500,-0.350,-14.005
+BTV,2025-26 season,inland lowland (<200 m),572,2.388,0.059,2.456
+BTV,2025-26 season,hills (200-600 m),947,3.025,0.176,5.811
+BTV,2025-26 season,mountains (>=600 m),201,3.574,-0.037,-1.026
+ALY,full record,coast (<15 km from ocean),258,2.580,0.024,0.914
+ALY,full record,inland lowland (<200 m),486,3.112,-0.253,-8.124
+ALY,full record,hills (200-600 m),1618,3.966,-0.195,-4.904
+ALY,full record,mountains (>=600 m),414,5.044,-0.172,-3.405
+ALY,2025-26 season,coast (<15 km from ocean),258,2.788,-0.282,-10.123
+ALY,2025-26 season,inland lowland (<200 m),486,2.922,-0.528,-18.070
+ALY,2025-26 season,hills (200-600 m),1618,3.489,-0.500,-14.315
+ALY,2025-26 season,mountains (>=600 m),414,4.285,-0.592,-13.813
+BOX,full record,coast (<15 km from ocean),553,3.705,-0.026,-0.708
+BOX,full record,inland lowland (<200 m),776,4.513,0.047,1.043
+BOX,full record,hills (200-600 m),423,5.340,0.115,2.153
+BOX,2025-26 season,coast (<15 km from ocean),553,6.151,-1.214,-19.731
+BOX,2025-26 season,inland lowland (<200 m),776,5.393,-0.310,-5.739
+BOX,2025-26 season,hills (200-600 m),423,5.691,-0.225,-3.949
+OKX,full record,coast (<15 km from ocean),742,4.447,-0.015,-0.329
+OKX,full record,inland lowland (<200 m),269,5.033,0.084,1.678
+OKX,full record,hills (200-600 m),93,5.537,-0.007,-0.122
+OKX,2025-26 season,coast (<15 km from ocean),742,8.819,-0.824,-9.346
+OKX,2025-26 season,inland lowland (<200 m),269,8.622,-0.815,-9.458
+OKX,2025-26 season,hills (200-600 m),93,9.136,-1.222,-13.373
